@@ -2,7 +2,7 @@ import fileReader as fr
 import numpy as np
 import random
 RANDOM_SEED_VALUE = 10
-rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
+rnd = np.random.RandomState() 
 
 def getKnapFitness(N, data, binArr, maxWeight):
     totalWeight = 0
@@ -16,72 +16,73 @@ def getKnapFitness(N, data, binArr, maxWeight):
         i += 1
 
     if(totalWeight == 0 and totalValue == 0):
+        return 0.1
+
+
+    if(totalWeight > maxWeight): # if overfilled 
         return 0.0
 
-    # want to fill knap as much as possible without overfilling 
-    adjWeight = totalWeight
-
-    if(totalWeight > maxWeight): # if overfilled it will give a score of 0
-        adjWeight = 0
-
-
     # 50% score from value proportion, 50% value from filling knapsack as much as possible
-    return (totalValue / totalWeight) + (adjWeight / maxWeight)
+    return (float(totalValue) / totalWeight) + (float(totalWeight) / maxWeight)
 
 
 def mutate(rate, population):
+    mutated = []
     hundScale = int(rate * 100)
-    for row in population:
-        for item in row[1]:
+
+    for i in range(len(population)):
+        for j in range( len(population[i][1])):
             randNum = rnd.randint(100)
             if( randNum < hundScale):
-                if(item == 1):
-                    item = 0
+                if(population[i][1][j] == 1):
+                    population[i][1][j] = 0
                 else:
-                    item = 1
+                    population[i][1][j] = 1
+
+    return population
 
 
 def generatePopulation(popSize, N):
     population = []
-    for i in range(popSize):
+    population.append((float(0.0), np.zeros(N, dtype=int)))
+    population.append((float(0.0), np.ones(N, dtype=int)))
+    for i in range(popSize - 2):
         arr = np.random.randint(2, size=N)
         population.append((float(0.0), arr))
 
     return population
 
-def generateIntermediatePopulation(population, popSize):
+def generateIntermediatePopulation(population, popSize, N):
     popAverage = 0.0
     for row in population:
        popAverage += row[0]
     popAverage /= popSize
 
     intermediatePop = []
-
-    for i in range(10):
-        intermediatePop.append(population[i])
-
+    #print(popAverage, len(population))
+    
+    
 
     for row in population:
+        
         randNum = rnd.randint(100)
 
-        if(row[0] > 3 * popAverage):
-            intermediatePop.append(row)
-        if(row[0] > 2 * popAverage and randNum > 25):
-            intermediatePop.append(row)
-        if(row[0] > popAverage and randNum > 50):
-            intermediatePop.append(row)
-        if(row[0] > .75 * popAverage and randNum > 75):
-            intermediatePop.append(row)
+        fitness = row[0]
 
-    while(len(intermediatePop) < 100):
-        intermediatePop.append(population[rnd.randint(100)])
+        if(fitness != 0):
+            intermediatePop.append(row)
+        # readd high performers
+        if( fitness >= popAverage and randNum > 10):
+            for i in range(10):
+                    intermediatePop.append(row)
+        if( randNum > 95):
+            intermediatePop.append(row)
 
     # get new pop 
     returnPop = []
-
     # cross over or 25% chance to take parent
-    for i in range(popSize):
-        pairs = random.choices(population, k=2)
+    for i in range(popSize // 2):
+        pairs = random.choices(intermediatePop, k=2)
         randNum = rnd.randint(4)
         if(randNum == 0):
             returnPop.append(pairs[0])
@@ -90,21 +91,41 @@ def generateIntermediatePopulation(population, popSize):
             item1 = pairs[0][1]
             item2 = pairs[1][1]
 
-            pivot = rnd.randint(1, len(item1)-1)
+            pivot = rnd.randint(1, N-1)
          
+            newItem1 = []
+            newItem2 = []
+            for i in range(0,pivot):
+                newItem1 = newItem1 + [item1[i]]
+                newItem2 = newItem2 +  [item2[i]]
 
-            newItem1 = item1[0:pivot]
-            for x in item2[pivot::1]:
-                newItem1 + [x]
-
-            newItem2 = item2[0:pivot]
-            for x in  item1[pivot::1]:
-                newItem2 + [x]
+            for i in range(pivot, N):
+                newItem1 = newItem1 + [item2[i]]
+                newItem2 = newItem2 + [item1[i]]
 
             returnPop.append((pairs[0][0], newItem1))
             returnPop.append((pairs[1][0], newItem2))
 
     return returnPop
+
+
+def constructList(binArr, data, n):
+    returnList = []
+    for i in range(n):
+        if( binArr[i] == 1):
+            returnList += [data[i]]
+
+    return returnList
+
+def getWeightAndValue(knap, data):
+    totWeight = 0
+    totVal = 0
+    for i in range(len(knap)):
+        if(knap[i] == 1):
+            totWeight += data[i][1]
+            totVal += data[i][2]
+    return(totWeight, totVal)
+            
 
 
 def genKnapRunner(fileName):
@@ -113,34 +134,44 @@ def genKnapRunner(fileName):
     POPULATION_SIZE = 100
     MUTATION_RATE = 0.05
     NUM_GENERATIONS = 200
+    BEST_SELECTION = (-1, [1])
 
     N = fileData[0]
     maxWeight = fileData[1]
     data = fileData[2]
 
-    population = generatePopulation(100, N)
+    population = generatePopulation(POPULATION_SIZE, N)
+    population.sort(key=lambda a: a[0], reverse=True)
 
+    BEST_SELECTION = (0.1, np.zeros(N,dtype=int))
 
     numGenerations = 0
     while(numGenerations < NUM_GENERATIONS):
         for i in range(POPULATION_SIZE):
             fitness = getKnapFitness(N, data, population[i], maxWeight)
             population[i] = (fitness, population[i][1])
+
         
         population.sort(key=lambda a: a[0], reverse=True)
-        print("Generation: ", numGenerations, " Best Option: ", population[0])
-        newPop = generateIntermediatePopulation(population, POPULATION_SIZE)
 
-        mutate(MUTATION_RATE, newPop)
+        if(population[0][0] > BEST_SELECTION[0]):
+            BEST_SELECTION = (population[0][0], (population[0][1]).copy())
+            print("Generation: ", numGenerations, " Best Option: ", BEST_SELECTION, getWeightAndValue(BEST_SELECTION[1], data))
+
+        population = generateIntermediatePopulation(population, POPULATION_SIZE, N)
+
+        population = mutate(MUTATION_RATE, population)
 
         numGenerations += 1
+        for i in range(POPULATION_SIZE):
+            fitness = getKnapFitness(N, data, population[i], maxWeight)
+            population[i] = (fitness, population[i][1])
 
-    population.sort(key=lambda a: a[0], reverse=True)
 
-
-    print("**************************************************************")
+    print("\n\n\n**************************************************************")
     print("The best selection is: ")
-    print(population[0])
+    print(BEST_SELECTION, getWeightAndValue(BEST_SELECTION[1], data))
+    print("**************************************************************\n\n\n")
 
-    return (N, maxWeight, population[0][1])
+    return (N, maxWeight, constructList(BEST_SELECTION[1], data, N))
     

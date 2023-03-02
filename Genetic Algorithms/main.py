@@ -11,13 +11,12 @@ def print_menu():
     print(menu)
 
 def printAnswer(result, algType):
-    print('With a maximum weight of {}. The {} algorithm recommends you take the following items:'.format(result[0], algType))
-    result[1].sort(key=lambda a: a[0])
+    print('With a maximum weight of {}. The {} algorithm recommends you take the following items:'.format(result[1], algType))
 
     totalWeight = 0
     totalValue = 0
 
-    for row in result[1]:
+    for row in result[2]:
         totalWeight += int(row[1])
         totalValue += int(row[2])
         print(row)
@@ -39,15 +38,14 @@ def menu():
             print('Running the Genetic Knapsack Algorithm')
             print("What is the name of the file in the cases folder that you want to use? (No extension)")
             user_input = input()
-           # printAnswer(
-            ga.genKnapRunner(user_input)
-                #, "Genetic Knapsack")
+            printAnswer(ga.genKnapRunner(user_input), "Genetic Knapsack")
 
         # Exit
         elif user_input == 9:
             print('Exiting...')
             break
-
+        else:
+            print('Response not recognized, please enter your option again')
         print("\nPress enter to continue...")
         clutter = input()
         print('\n\n\n\n\n\n')

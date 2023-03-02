@@ -155,7 +155,7 @@ def genKnapRunner(fileName):
 
         if(getWeightAndValue(population[0][1], data)[1] > getWeightAndValue(BEST_SELECTION[1],data)[1]):
             BEST_SELECTION = (population[0][0], (population[0][1]).copy())
-            print("Generation: ", numGenerations, " Best Option: ", BEST_SELECTION, getWeightAndValue(BEST_SELECTION[1], data))
+            print("\nGeneration: ", numGenerations, " Best Option: ", BEST_SELECTION, getWeightAndValue(BEST_SELECTION[1], data))
 
         population = generateIntermediatePopulation(population, POPULATION_SIZE, N)
 

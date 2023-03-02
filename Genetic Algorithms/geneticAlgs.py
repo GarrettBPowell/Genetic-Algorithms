@@ -28,12 +28,11 @@ def getKnapFitness(N, data, binArr, maxWeight):
 
 def mutate(rate, population):
     mutated = []
-    hundScale = int(rate * 100)
 
     for i in range(len(population)):
         for j in range( len(population[i][1])):
-            randNum = rnd.randint(100)
-            if( randNum < hundScale):
+            randNum = rnd.rand()
+            if( randNum < rate):
                 if(population[i][1][j] == 1):
                     population[i][1][j] = 0
                 else:
@@ -132,7 +131,7 @@ def genKnapRunner(fileName):
     fileData = fr.readFileKnap(fileName)
 
     POPULATION_SIZE = 100
-    MUTATION_RATE = 0.05
+    MUTATION_RATE = 0.005
     NUM_GENERATIONS = 200
     BEST_SELECTION = (-1, [1])
 
@@ -154,7 +153,7 @@ def genKnapRunner(fileName):
         
         population.sort(key=lambda a: a[0], reverse=True)
 
-        if(population[0][0] > BEST_SELECTION[0]):
+        if(getWeightAndValue(population[0][1], data)[1] > getWeightAndValue(BEST_SELECTION[1],data)[1]):
             BEST_SELECTION = (population[0][0], (population[0][1]).copy())
             print("Generation: ", numGenerations, " Best Option: ", BEST_SELECTION, getWeightAndValue(BEST_SELECTION[1], data))
 

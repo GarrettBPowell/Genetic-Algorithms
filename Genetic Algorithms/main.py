@@ -1,4 +1,5 @@
 import geneticAlgs as ga
+import stockReader as sr
 
 def print_menu():
     menu = """================================\n
@@ -39,6 +40,13 @@ def menu():
             print("What is the name of the file in the cases folder that you want to use? (No extension)")
             user_input = input()
             printAnswer(ga.genKnapRunner(user_input), "Genetic Knapsack")
+
+        if user_input == 2:
+            print('Stocks')
+            print("What is the name of the file in the cases folder that you want to use? (No extension)")
+            user_input = input()
+            data = sr.readFileStocks(user_input)
+            print(data)
 
         # Exit
         elif user_input == 9:

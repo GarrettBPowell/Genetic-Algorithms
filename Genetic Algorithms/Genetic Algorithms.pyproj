@@ -31,15 +31,42 @@
     <Compile Include="stockReader.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="stockAlgs.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="stockResources\" />
     <Folder Include="resources\" />
+    <Folder Include="stockResources\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="resources\test5.csv" />
     <Content Include="resources\test100.csv" />
-    <Content Include="stockResources\TextFile1.txt" />
+    <Content Include="stockResources\AAPL-1.txt" />
+    <Content Include="stockResources\AAPL-2.txt" />
+    <Content Include="stockResources\AAPL-3.txt" />
+    <Content Include="stockResources\AAPL-4.txt" />
+    <Content Include="stockResources\AAPL-5.txt" />
+    <Content Include="stockResources\DDS-1.txt" />
+    <Content Include="stockResources\DDS-2.txt" />
+    <Content Include="stockResources\DDS-3.txt" />
+    <Content Include="stockResources\DDS-4.txt" />
+    <Content Include="stockResources\DDS-5.txt" />
+    <Content Include="stockResources\F-1.txt" />
+    <Content Include="stockResources\F-2.txt" />
+    <Content Include="stockResources\F-3.txt" />
+    <Content Include="stockResources\F-4.txt" />
+    <Content Include="stockResources\F-5.txt" />
+    <Content Include="stockResources\GE-1.txt" />
+    <Content Include="stockResources\GE-2.txt" />
+    <Content Include="stockResources\GE-3.txt" />
+    <Content Include="stockResources\GE-4.txt" />
+    <Content Include="stockResources\GE-5.txt" />
+    <Content Include="stockResources\RTX-1.txt" />
+    <Content Include="stockResources\RTX-2.txt" />
+    <Content Include="stockResources\RTX-3.txt" />
+    <Content Include="stockResources\RTX-4.txt" />
+    <Content Include="stockResources\RTX-5.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

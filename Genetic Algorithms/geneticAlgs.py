@@ -2,7 +2,7 @@ import fileReader as fr
 import numpy as np
 import random
 RANDOM_SEED_VALUE = 10
-rnd = np.random.RandomState() 
+rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
 def getKnapFitness(N, data, binArr, maxWeight):
     totalWeight = 0

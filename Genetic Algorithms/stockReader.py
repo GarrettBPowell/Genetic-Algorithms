@@ -10,7 +10,7 @@ def readFileStocks(fileNameRead):
 
     with open(fileName, 'r') as file:
         lineNum = 0
-
+        
         for line in file.readlines():
             if(lineNum == 0):
                 name = line

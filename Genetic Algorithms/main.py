@@ -1,13 +1,13 @@
 import geneticAlgs as ga
 import stockAlgs as sa
+import stockReader as sr
 
 def print_menu():
     menu = """================================\n
            MENU\n
                ================================\n
                1 - Genetic Knapsack
-               2 - Stocks (Single File)
-               3 - Stocks (whole folder)
+               2 - Stocks (whole folder)
                9 - Exit                        \n
                ================================\n
            Enter a choice and press enter:"""
@@ -44,13 +44,6 @@ def menu():
             printAnswer(ga.genKnapRunner(user_input), "Genetic Knapsack")
 
         if user_input == 2:
-            print('Running Stocks on single file')
-            print("What is the name of the file in the cases folder that you want to use? (No extension)")
-            user_input = input()
-            data = sr.readFileStocks(user_input)
-            print(data)
-
-        if user_input == 3:
             print('Stock')
             sa.stockRunner()
 

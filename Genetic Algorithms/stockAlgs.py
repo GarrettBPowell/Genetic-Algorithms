@@ -12,23 +12,24 @@ def calcSMA(dataRange):
 def simpleMovingAverage(stockData, N):
     index = 0
     currentRange = []
+    trueIndexes = set({})
     length = len(stockData) - 1
     if(len(stockData) <= N):
-        return False
+        return trueIndexes
 
     while(index < length):
         while(index < length and len(currentRange) < N):
             currentRange.append(stockData[index])
             index += 1
         if(index >= length):
-            return False
+            return trueIndexes
 
         if(stockData[index + 1] > calcSMA(currentRange)):
-           return True
+           trueIndexes.add(index + 1)
 
         del(currentRange[0])
 
-    return False
+    return trueIndexes
 
 def calcEMA(dataRange):
     a = 2 / (len(dataRange) + 1)
@@ -44,24 +45,25 @@ def calcEMA(dataRange):
 def exponentialMovingAverage(stockData, N):
     index = 0
     currentRange = []
+    trueIndexes = set({})
     length = len(stockData) - 1
 
     if(len(stockData) <= N):
-        return False
+        return trueIndexes
 
     while(index < length):
         while(index < length and len(currentRange) < N):
             currentRange.append(stockData[index])
             index += 1
         if(index >= length):
-            return False
+            return trueIndexes
 
         if(stockData[index + 1] > calcEMA(currentRange)):
-           return True
+           trueIndexes.add(index + 1)
 
         del(currentRange[0])
 
-    return False
+    return trueIndexes
 
 def CalcMax(dataRange):
     return max(dataRange)
@@ -70,23 +72,24 @@ def CalcMax(dataRange):
 def maximum(stockData, N):
     index = 0
     currentRange = []
+    trueIndexes = set({})
     length = len(stockData) - 1
 
     if(len(stockData) <= N):
-        return False
+        return trueIndexes
 
     while(index < length):
         while(index < length and len(currentRange) < N):
             currentRange.append(stockData[index])
             index += 1
         if(index >= length):
-            return False
+            return trueIndexes
         if(stockData[index + 1] > max(currentRange)):
-           return True
+           trueIndexes.add(index + 1)
 
         del(currentRange[0])
 
-    return False
+    return trueIndexes
 
 # runs input data against 3 rules contained in genotype
 def calcFitness(stockData, population):
@@ -94,12 +97,11 @@ def calcFitness(stockData, population):
     for genotypes in population:
         # somehow break out the different rules
         ruleBlock = genotypes[1]
-        rules = [(False, ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (False, ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (False, ruleBlock[10], int(ruleBlock[11:14]), 'end')]
+        rules = [(set({}), ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (set({}), ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (set({}), ruleBlock[10], int(ruleBlock[11:14]), 'end')]
 
         profit = 0
         availableFunds = 20000
-
-        response = False
+        response = set({})
 
         for dataset in stockData:    
             if(availableFunds > 0):
@@ -113,20 +115,30 @@ def calcFitness(stockData, population):
                         elif(rule[1] == 'm'):
                             newRules.append((maximum(dataset, rule[2]), rule[1], rule[2], rule[3]))
                     else:
-                        newRules.append((True, rule[1], rule[2], rule[3]))
-                if(newRules[0][3] == '&'):
-                    response = newRules[0][0] and newRules[1][0]
-                elif(newRules[0][3] == '|'):
-                    response = newRules[0][0] or newRules[1][0]
+                        newRules.append((set({}), rule[1], rule[2], rule[3]))
 
-                if(newRules[1][3] == '&'):
-                    response = response and newRules[2][0]
-                elif(newRules[1][3] == '|'):
-                    response = response or newRules[2][0]
+                
+                # if all rules are & then get the intersection
+                if(newRules[0][3] == '&' and newRules[1][3] == '&'):
+                    response = (newRules[0][0].intersection(newRules[1][0])).intersection(newRules[2][0])
+
+                # if first rule is & get the intersection of the first two
+                elif(newRules[0][3] == '&'):
+                     response = (newRules[0][0].intersection(newRules[1][0]))
+                     response = response.union(newRules[2][0])
+
+                # if second rule is & get the intersection of the second two
+                elif(newRules[1][3] == '&'):
+                    response = newRules[1][0].intersection(newRules[2][0])
+                else:
+                    response = (newRules[0][0].union(newRules[1][0])).union(newRules[2][0])
+
+
+
 
                 # buy and sell stocks
-                if(response):
-                    totalStock = availableFunds / 10
+                if(len(response) > 0):
+                    totalStock = availableFunds / response.pop()
                     availableFunds = (dataset[-1]) * totalStock
                 # didn't buy 
                 else:
@@ -184,7 +196,7 @@ def genereatePopulation(popSize):
     return population
 
 def stockRunner():
-    POPULATION_SIZE = 20
+    POPULATION_SIZE = 50
     stockData = sr.readAllFileStocks()
 
     population = genereatePopulation(POPULATION_SIZE)

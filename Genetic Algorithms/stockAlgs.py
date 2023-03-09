@@ -106,6 +106,8 @@ def calcFitness(stockData, population):
         for dataset in stockData:    
             if(availableFunds > 0):
                 newRules = []
+
+                # if the rules are ands, change the index that it starts at to exclude stuff that does not need to be calculated
                 for rule in rules:
                     if(rule[2] != 0):
                         if(rule[1] == 's'):
@@ -117,25 +119,50 @@ def calcFitness(stockData, population):
                     else:
                         newRules.append((set({}), rule[1], rule[2], rule[3]))
 
+                # if all rules are & start first rule and run entire sequence, take second rule and start it at the index where the first rule is first true. Take the last rule and start
+                # it at the first index of rule 1 and 2 where it is true, else don't run the rule
+
+                # if first rule is & run the entire first rule and then start the second rule from the first true index of the first rule. Run 3rd rule up to index unless the index of the first union is less than the rule
+                
                 
                 # if all rules are & then get the intersection
                 if(newRules[0][3] == '&' and newRules[1][3] == '&'):
-                    response = (newRules[0][0].intersection(newRules[1][0])).intersection(newRules[2][0])
+                    if(newRules[0][2] != 0):
+                        response = newRules[0][0]
+                        if(newRules[1][2] != 0):
+                            response = response.intersection(newRules[1][0])
+                        if(newRules[2][2] != 0):
+                            response = response.intersection(newRules[2][0])
+                    elif(newRules[1][2] != 0):
+                        response = newRules[1][0]
+                        if(newRules[2][2] != 0):
+                            response = response.intersection(newRules[2][0])
+                    else:
+                        response = newRules[2][0]
 
                 # if first rule is & get the intersection of the first two
                 elif(newRules[0][3] == '&'):
-                     response = (newRules[0][0].intersection(newRules[1][0]))
+                     if(newRules[0][2] != 0):
+                        response = newRules[0][0]
+                        if(newRules[1][2] != 0):
+                            response = response.intersection(newRules[1][0])
                      response = response.union(newRules[2][0])
 
                 # if second rule is & get the intersection of the second two
                 elif(newRules[1][3] == '&'):
-                    response = newRules[1][0].intersection(newRules[2][0])
+                     if(newRules[1][2] != 0):
+                        response = newRules[1][0]
+                        if(newRules[2][2] != 0):
+                            response = response.intersection(newRules[2][0])
+                     else:
+                         response = newRules[2][0]
+                     response = response.union(newRules[0][0])
                 else:
                     response = (newRules[0][0].union(newRules[1][0])).union(newRules[2][0])
 
 
 
-
+                #print("Available Funds: ", availableFunds, " Profit: ", profit, " Response: ", response)
                 # buy and sell stocks
                 if(len(response) > 0):
                     totalStock = availableFunds / response.pop()
@@ -193,14 +220,16 @@ def genereatePopulation(popSize):
         genotype = ruleTypes[0] + ruleValues[0] + ruleBools[0] + ruleTypes[1] + ruleValues[1] + ruleBools[1] + ruleTypes[2] + ruleValues[2]
         population.append((0.0, genotype))
 
+        population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
+
     return population
 
 def stockRunner():
-    POPULATION_SIZE = 50
+    POPULATION_SIZE = 1
     stockData = sr.readAllFileStocks()
 
     population = genereatePopulation(POPULATION_SIZE)
     population = calcFitness(stockData, population)
 
     for x in population:
-        print(x)
+        print("{}, {}".format(x[1], round(x[0], 2)))

@@ -41,7 +41,6 @@
     <Folder Include="Fitness\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Fitness\Fitness 3-8-23.txt" />
     <Content Include="resources\test5.csv" />
     <Content Include="resources\test100.csv" />
     <Content Include="stockResources\AAPL-1.txt" />

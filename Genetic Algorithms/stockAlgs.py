@@ -3,6 +3,10 @@ import numpy as np
 import random 
 
 RANDOM_SEED_VALUE = 10
+POPULATION_SIZE = 20
+MUTATION_RATE = .1
+GENERATIONS = 20
+
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
 def calcSMA(dataRange):
@@ -56,6 +60,67 @@ def runRule(rule, range):
 
     return -1
 
+def getRandRule(current):
+    if current == 's':
+        return random.choice(['m', 'e'])
+    if current == 'm':
+        return random.choice(['s','e'])
+
+    return e
+
+def getRandNum(current):
+    return random.choice([i for i in range(0,9) if i not in [current]])
+
+def mutate(rate, population):
+    mutated = []
+
+    for row in population:
+        newRule = ""
+
+        for x in range(2):
+            # change first/ sec rule
+            randNum = rnd.rand()
+            if( randNum < rate):
+                newRule += getRandRule(row[1][x*5])
+            else:
+                newRule += row[1][x * 5]
+
+            # change first/ sec rule num
+            for i in range (1 + x*5, 1 + x*5):
+                randNum = rnd.rand()
+                if( randNum < rate):
+                    newRule += getRandNum(int(row[1][i]))
+
+            # change first/sec bool
+            randNum = rnd.rand()
+            if randNum < rate and row[1][1 + x*5] == '&':
+               newRule += '|'
+            elif randNum < rate:
+                newRule += '&'
+            else:
+                newRule += row[1][1 + x*5]
+
+        # change third rule
+        randNum = rnd.rand()
+        if( randNum < rate):
+            newRule += getRandRule(row[1][10])
+        else:
+            newRule += row[1][10]
+
+        # change third rule num
+        for i in range (11,14):
+            randNum = rnd.rand()
+            if( randNum < rate):
+                newRule += getRandNum(int(row[1][i]))
+            else:
+                newRule += row[1][i]
+
+
+
+
+
+
+    return population
 
 # runs input data against 3 rules contained in genotype
 def calcFitness(stockData, population):
@@ -175,8 +240,60 @@ def calcFitness(stockData, population):
         fitPop.append((profit, genotypes[1]))
     return fitPop
 
-def generateIntermediatePopulation():
-    print('')
+
+
+def generateIntermediatePopulation(population, popSize, N):
+    popAverage = 0.0
+    for row in population:
+       popAverage += row[0]
+    popAverage /= popSize
+
+    intermediatePop = []
+    #print(popAverage, len(population))
+
+
+    for row in population:
+        
+        randNum = rnd.randint(100)
+        fitness = row[0]
+
+        if(fitness != 0):
+            intermediatePop.append(row)
+        # readd high performers
+        if( fitness >= popAverage and randNum > 10):
+            for i in range(10):
+                    intermediatePop.append(row)
+        if( randNum > 95):
+            intermediatePop.append(row)
+
+
+    # get new pop 
+    returnPop = []
+    # cross over or 25% chance to take parent
+    for i in range(popSize // 2):
+        pairs = random.choices(intermediatePop, k=2)
+        randNum = rnd.randint(4)
+        if(randNum == 0):
+            returnPop.append(pairs[0])
+            returnPop.append(pairs[1])
+        else:
+            item1 = pairs[0][1]
+            item2 = pairs[1][1]
+
+            pivot = rnd.randint(1, N-1)
+         
+            newItem1 = []
+            newItem2 = []
+
+            newItem1 = item1[0:pivot] + item2[pivot:]
+            newItem2 = item2[0:pivot] + item1[pivot:]
+            #print("New Item1: ", newItem1, "New Item 2: ", newItem2)
+
+            returnPop.append((pairs[0][0], newItem1))
+            returnPop.append((pairs[1][0], newItem2))
+
+    return returnPop
+    
 
 # makes the initial population based off set pop size
 def genereatePopulation(popSize):
@@ -210,16 +327,30 @@ def genereatePopulation(popSize):
         genotype = ruleTypes[0] + ruleValues[0] + ruleBools[0] + ruleTypes[1] + ruleValues[1] + ruleBools[1] + ruleTypes[2] + ruleValues[2]
         population.append((0.0, genotype))
 
-        population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
+        #population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
 
     return population
 
 def stockRunner():
-    POPULATION_SIZE = 1
     stockData = sr.readAllFileStocks()
+
+    bestRule = (0.0,"s050&m050&e050")
 
     population = genereatePopulation(POPULATION_SIZE)
     population = calcFitness(stockData, population)
+
+    for i in range(GENERATIONS):
+        population = generateIntermediatePopulation(population, POPULATION_SIZE, 14)
+        population = mutate(MUTATION_RATE, population)
+        population = calcFitness(stockData, population)
+        population.sort(key=lambda a: a[0], reverse=True)
+
+        if(population[0][0] > bestRule[0]):
+            bestRule = population[0]
+            print("*************************************")
+            print("New best rule in {} generation is {} \n\n".format(i, bestRule))
+
+        print("\n\n\n", population)
 
     for x in population:
         print("{}, {}".format(x[1], round(x[0], 2)))

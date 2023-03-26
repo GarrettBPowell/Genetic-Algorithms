@@ -66,10 +66,10 @@ def getRandRule(current):
     if current == 'm':
         return random.choice(['s','e'])
 
-    return e
+    return 'e'
 
 def getRandNum(current):
-    return random.choice([i for i in range(0,9) if i not in [current]])
+    return str(random.choice([i for i in range(0,9) if i not in [current]]))
 
 def mutate(rate, population):
     mutated = []
@@ -114,11 +114,7 @@ def mutate(rate, population):
                 newRule += getRandNum(int(row[1][i]))
             else:
                 newRule += row[1][i]
-
-
-
-
-
+        row = (row[0], newRule)
 
     return population
 

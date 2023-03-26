@@ -1,5 +1,6 @@
 import csv
 import os
+import numpy as np
 
 def readFileStocks(fileNameRead):
     name = ''
@@ -44,5 +45,5 @@ def readAllFileStocks():
                     else:
                         stockPrices.append(float(line))
                     lineNum +=1 
-                allStocks.append(stockPrices)
-    return allStocks
+                allStocks.append(np.array(stockPrices))
+    return np.array(allStocks, dtype=object)

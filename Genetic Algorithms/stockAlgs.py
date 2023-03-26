@@ -3,9 +3,9 @@ import numpy as np
 import random 
 
 RANDOM_SEED_VALUE = 10
-POPULATION_SIZE = 20
+POPULATION_SIZE = 50
 MUTATION_RATE = .1
-GENERATIONS = 20
+GENERATIONS = 100
 
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
@@ -122,120 +122,125 @@ def mutate(rate, population):
 def calcFitness(stockData, population):
     fitPop = []
     for genotypes in population:
-        # somehow break out the different rules
-        ruleBlock = genotypes[1]
-        rules = [(ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (ruleBlock[10], int(ruleBlock[11:14]), 'end')]
+        if genotypes[2]:
+            # somehow break out the different rules
+            ruleBlock = genotypes[1]
+            rules = [(ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (ruleBlock[10], int(ruleBlock[11:14]), 'end')]
 
-        profit = 0
-        availableFunds = 20000
-        response = set({})
-        numOfPurchasedStocks = 0
+            profit = 0
+            availableFunds = 20000
+            response = set({})
+            numOfPurchasedStocks = 0
 
-        if not(rules[0][1] == 0 and rules[1][1] == 0 and rules[2][1] == 0):
-            for dataset in stockData:
+            if not(rules[0][1] == 0 and rules[1][1] == 0 and rules[2][1] == 0):
+                for dataset in stockData:
 
-                rule0Range = []
-                rule1Range = []
-                rule2Range = []
+                    rule0Range = []
+                    rule1Range = []
+                    rule2Range = []
 
-                for data in dataset:
-                    ruleBoolean = [False, False, False]
+                   # if(rules[0][2] == '&' and rules[1][2] == '&'):
+                    #    print('skip')
 
-                    # adjust profit and available funds to be appropriate starting ammounts
-                    if(availableFunds > 20000):
-                        profit += availableFunds - 20000
-                        availableFunds = 20000
-                    elif(availableFunds < 20000 and numOfPurchasedStocks == 0):
-                        if(profit - (20000 - availableFunds) > 0):
-                            profit -= 20000 - availableFunds
+                    for data in dataset:
+                        ruleBoolean = [False, False, False]
+
+                        # adjust profit and available funds to be appropriate starting ammounts
+                        if(availableFunds > 20000):
+                            profit += availableFunds - 20000
                             availableFunds = 20000
-                        else:
-                            availableFunds += profit
-                            profit = 0
+                        elif(availableFunds < 20000 and numOfPurchasedStocks == 0):
+                            if(profit - (20000 - availableFunds) > 0):
+                                profit -= 20000 - availableFunds
+                                availableFunds = 20000
+                            else:
+                                availableFunds += profit
+                                profit = 0
 
-                # add current data to previous data and adjust accordingly
-                    if( len(rule0Range) < rules[0][1]):
-                        rule0Range.append(data)
-                        ruleBoolean[0] = False
-                    elif(rules[0][1] != 0) :                 
-                        ruleReturn = runRule(rules[0], rule0Range)
-                        if(numOfPurchasedStocks == 0 and data > ruleReturn):
-                            ruleBoolean[0] = True
-                        elif numOfPurchasedStocks > 0 and data < ruleReturn:
-                            ruleBoolean[0] = True
+                    # add current data to previous data and adjust accordingly
+                        if( len(rule0Range) < rules[0][1]):
+                            rule0Range.append(data)
+                            ruleBoolean[0] = False
+                        elif(rules[0][1] != 0) :                 
+                            ruleReturn = runRule(rules[0], rule0Range)
+                            if(numOfPurchasedStocks == 0 and data > ruleReturn):
+                                ruleBoolean[0] = True
+                            elif numOfPurchasedStocks > 0 and data < ruleReturn:
+                                ruleBoolean[0] = True
                
-                        del(rule0Range[0])
-                        rule0Range.append(data)
+                            del(rule0Range[0])
+                            rule0Range.append(data)
 
-                    if( len(rule1Range) < rules[1][1]):
-                       rule1Range.append(data)
-                       ruleBoolean[1] = False
-                    elif rules[1][1] != 0:
-                        ruleReturn = runRule(rules[1], rule1Range)
-                        if(numOfPurchasedStocks == 0 and data > ruleReturn):
-                            ruleBoolean[1] = True
-                        elif numOfPurchasedStocks > 0 and data < ruleReturn:
-                            ruleBoolean[1] = True
+                        if( len(rule1Range) < rules[1][1]):
+                           rule1Range.append(data)
+                           ruleBoolean[1] = False
+                        elif rules[1][1] != 0:
+                            ruleReturn = runRule(rules[1], rule1Range)
+                            if(numOfPurchasedStocks == 0 and data > ruleReturn):
+                                ruleBoolean[1] = True
+                            elif numOfPurchasedStocks > 0 and data < ruleReturn:
+                                ruleBoolean[1] = True
 
-                        del(rule1Range[0])
-                        rule1Range.append(data)
+                            del(rule1Range[0])
+                            rule1Range.append(data)
 
-                    if( len(rule2Range) < rules[2][1]):
-                       rule2Range.append(data)
-                       ruleBoolean[2] = False
-                    elif rules[2][1] != 0:
-                        ruleReturn = runRule(rules[2], rule2Range)
-                        if(numOfPurchasedStocks == 0 and data > ruleReturn):
-                            ruleBoolean[2] = True
-                        elif numOfPurchasedStocks > 0 and data < ruleReturn:
-                            ruleBoolean[2] = True
+                        if( len(rule2Range) < rules[2][1]):
+                           rule2Range.append(data)
+                           ruleBoolean[2] = False
+                        elif rules[2][1] != 0:
+                            ruleReturn = runRule(rules[2], rule2Range)
+                            if(numOfPurchasedStocks == 0 and data > ruleReturn):
+                                ruleBoolean[2] = True
+                            elif numOfPurchasedStocks > 0 and data < ruleReturn:
+                                ruleBoolean[2] = True
 
-                        del(rule2Range[0])
-                        rule2Range.append(data)
+                            del(rule2Range[0])
+                            rule2Range.append(data)
 
 
-                    # determine if the rule is true
-                    choice = False
+                        # determine if the rule is true
+                        choice = False
 
-                    # check that the range is not 0 meaning that that portion of the rule should be excluded
-                    # if rules are applied it checks the bools determined from the above code against each portion of the rule from left to right
-                    # if 2 of the 3 rules are excluded it takes the bool of the remaining rule
-                    # if the middle rule is excluded it takes the bool of the first and last rule and uses the 2 operator in the sequence ie. s100|m000&s500 would do s100&s500
-                    if rules[0][1] != 0 and rules[1][1] != 0:
-                        if(rules[0][2] == '&'):
-                            choice = ruleBoolean[0] and ruleBoolean[1]
-                        else:
-                            choice = ruleBoolean[0] or ruleBoolean[1]
-                    elif rules[0][1] != 0:
-                        choice = ruleBoolean[0]
-                    elif rules[1][1] != 0:
-                        choice = ruleBoolean[1]
+                        # check that the range is not 0 meaning that that portion of the rule should be excluded
+                        # if rules are applied it checks the bools determined from the above code against each portion of the rule from left to right
+                        # if 2 of the 3 rules are excluded it takes the bool of the remaining rule
+                        # if the middle rule is excluded it takes the bool of the first and last rule and uses the 2 operator in the sequence ie. s100|m000&s500 would do s100&s500
+                        if rules[0][1] != 0 and rules[1][1] != 0:
+                            if(rules[0][2] == '&'):
+                                choice = ruleBoolean[0] and ruleBoolean[1]
+                            else:
+                                choice = ruleBoolean[0] or ruleBoolean[1]
+                        elif rules[0][1] != 0:
+                            choice = ruleBoolean[0]
+                        elif rules[1][1] != 0:
+                            choice = ruleBoolean[1]
 
-                    if rules[2][1] != 0 and rules[1][1] != 0:
-                        if rules[1][2] == '&':
-                            choice = choice and ruleBoolean[2]
-                        else:
-                            choice = choice or ruleBoolean[2]
-                    elif rules[2][1] != 0 and rules[0][1] != 0:
-                        if rules[1][2] == '&':
-                            choice = choice and ruleBoolean[2]
-                        else:
-                            choice = choice or ruleBoolean[2]
-                    elif rules[2][1] != 0:
-                        choice = ruleBoolean[2]
+                        if rules[2][1] != 0 and rules[1][1] != 0:
+                            if rules[1][2] == '&':
+                                choice = choice and ruleBoolean[2]
+                            else:
+                                choice = choice or ruleBoolean[2]
+                        elif rules[2][1] != 0 and rules[0][1] != 0:
+                            if rules[1][2] == '&':
+                                choice = choice and ruleBoolean[2]
+                            else:
+                                choice = choice or ruleBoolean[2]
+                        elif rules[2][1] != 0:
+                            choice = ruleBoolean[2]
 
-                    if(choice):
-                        if(numOfPurchasedStocks == 0):
-                            numOfPurchasedStocks = availableFunds / data
-                            availableFunds = 0
-                        else:
-                            availableFunds = numOfPurchasedStocks * data
-                            numOfPurchasedStocks = 0
+                        if(choice):
+                            if(numOfPurchasedStocks == 0):
+                                numOfPurchasedStocks = availableFunds / data
+                                availableFunds = 0
+                            else:
+                                availableFunds = numOfPurchasedStocks * data
+                                numOfPurchasedStocks = 0
 
-        # save fitness
-        fitPop.append((profit, genotypes[1]))
+            # save fitness
+            fitPop.append((profit, genotypes[1], False))
+        else:
+            fitPop.append(genotypes)
     return fitPop
-
 
 
 def generateIntermediatePopulation(population, popSize, N):
@@ -253,13 +258,22 @@ def generateIntermediatePopulation(population, popSize, N):
         randNum = rnd.randint(100)
         fitness = row[0]
 
-        if(fitness != 0):
-            intermediatePop.append(row)
         # readd high performers
-        if( fitness >= popAverage and randNum > 10):
+        if( fitness >= popAverage * 2):
             for i in range(10):
+                randNum = rnd.randint(100)
+                if randNum > 10:
                     intermediatePop.append(row)
-        if( randNum > 95):
+
+        # readd above average performers
+        if( fitness >= popAverage):
+            for i in range(10):
+                randNum = rnd.randint(100)
+                if randNum > 10:
+                    intermediatePop.append(row)
+
+        randNum = rnd.randint(100)
+        if( randNum > 90):
             intermediatePop.append(row)
 
 
@@ -270,8 +284,8 @@ def generateIntermediatePopulation(population, popSize, N):
         pairs = random.choices(intermediatePop, k=2)
         randNum = rnd.randint(4)
         if(randNum == 0):
-            returnPop.append(pairs[0])
-            returnPop.append(pairs[1])
+            returnPop.append((pairs[0][0], pairs[0][1], False))
+            returnPop.append((pairs[1][0], pairs[1][1], False))
         else:
             item1 = pairs[0][1]
             item2 = pairs[1][1]
@@ -285,8 +299,11 @@ def generateIntermediatePopulation(population, popSize, N):
             newItem2 = item2[0:pivot] + item1[pivot:]
             #print("New Item1: ", newItem1, "New Item 2: ", newItem2)
 
-            returnPop.append((pairs[0][0], newItem1))
-            returnPop.append((pairs[1][0], newItem2))
+            returnPop.append((pairs[0][0], newItem1, True))
+            returnPop.append((pairs[1][0], newItem2, True))
+
+        if(len(set(returnPop)) < 2):
+            returnPop.append(random.choice(intermediatePop))
 
     return returnPop
     
@@ -321,7 +338,9 @@ def genereatePopulation(popSize):
                 ruleBools.append('|')
 
         genotype = ruleTypes[0] + ruleValues[0] + ruleBools[0] + ruleTypes[1] + ruleValues[1] + ruleBools[1] + ruleTypes[2] + ruleValues[2]
-        population.append((0.0, genotype))
+
+        # (fitness, rules, has the rule changed thus the fitness has changed?)
+        population.append((0.0, genotype, True))
 
         #population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
 
@@ -341,12 +360,22 @@ def stockRunner():
         population = calcFitness(stockData, population)
         population.sort(key=lambda a: a[0], reverse=True)
 
+        if population[0][1] == population[POPULATION_SIZE // 3][1]:
+            popultation = mutate(population, 0.5)
+            population = calcFitness(stockData, population)
+            population.sort(key=lambda a: a[0], reverse=True)
+        elif population[0][1] == population[POPULATION_SIZE // 2][1]:
+            popultation = mutate(population, 0.3)
+            population = calcFitness(stockData, population)
+            population.sort(key=lambda a: a[0], reverse=True)
+
+
         if(population[0][0] > bestRule[0]):
             bestRule = population[0]
-            print("*************************************")
-            print("New best rule in {} generation is {} \n\n".format(i, bestRule))
+            print("\n\n*************************************")
+            print("New best rule in {} generation is {} \n\n".format(i + 1, bestRule))
 
-        print("\n\n\n", population)
+        print("\n#{}\n".format(i + 1), population)
 
     for x in population:
         print("{}, {}".format(x[1], round(x[0], 2)))

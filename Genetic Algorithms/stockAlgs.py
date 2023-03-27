@@ -3,10 +3,10 @@ import numpy as np
 import random 
 import threading
 
-RANDOM_SEED_VALUE = 12
-POPULATION_SIZE = 5
+RANDOM_SEED_VALUE = 5
+POPULATION_SIZE = 50
 MUTATION_RATE = .1
-GENERATIONS = 10
+GENERATIONS = 100
 globalBestRule = (0.0, 'e746|e121|m517', True)
 
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
@@ -124,9 +124,9 @@ def calcFitness(stockData, population):
             if not(rules[0][1] == 0 and rules[1][1] == 0 and rules[2][1] == 0):
                 for dataset in stockData:
 
-                    rule0Range = []
-                    rule1Range = []
-                    rule2Range = []
+                    rule0Range = np.array([])
+                    rule1Range = np.array([])
+                    rule2Range = np.array([])
                     startPoint = 0
                     # skip portion of dataset if rules all depend on each other
                     if(rules[0][2] == '&' and rules[1][2] == '&'):
@@ -153,31 +153,31 @@ def calcFitness(stockData, population):
 
                     # add current data to previous data and adjust accordingly
                         if( len(rule0Range) < rules[0][1]):
-                            np.append(rule0Range,data)
+                            rule0Range = np.append(rule0Range, data)                  
                             ruleBoolean[0] = False
                         elif rules[0][1] != 0:               
                             ruleBoolean[0] = runRule(rules[0], rule0Range, data, numOfPurchasedStocks)
               
-                            np.delete(rule0Range, 0)
-                            np.append(rule0Range, data)
+                            rule0Range = np.delete(rule0Range, 0)
+                            rule0Range = np.append(rule0Range, data)
 
                         if( len(rule1Range) < rules[1][1]):
-                           np.append(rule1Range, data)
+                           rule1Range = np.append(rule1Range, data)
                            ruleBoolean[1] = False
                         elif rules[1][1] != 0:
                             ruleBoolean[1] = runRule(rules[1], rule1Range, data, numOfPurchasedStocks)
 
-                            np.delete(rule1Range, 0)
-                            np.append(rule1Range, data)
+                            rule1Range = np.delete(rule1Range, 0)
+                            rule1Range = np.append(rule1Range, data)
 
                         if( len(rule2Range) < rules[2][1]):
-                           np.append(rule2Range, data)
+                           rule2Range = np.append(rule2Range, data)
                            ruleBoolean[2] = False
                         elif rules[2][1] != 0:
                             ruleBoolean[2] = runRule(rules[2], rule2Range, data, numOfPurchasedStocks)
 
-                            np.delete(rule2Range, 0)
-                            np.append(rule2Range, data)
+                            rule2Range = np.delete(rule2Range, 0)
+                            rule2Range = np.append(rule2Range, data)
 
 
                         # determine if the rule is true
@@ -217,7 +217,6 @@ def calcFitness(stockData, population):
                             else:
                                 availableFunds = numOfPurchasedStocks * data
                                 numOfPurchasedStocks = 0
-
             # save fitness
             fitPop.append((profit, genotypes[1], False))
         else:
@@ -267,21 +266,16 @@ def generateIntermediatePopulation(population, popSize, N):
     for i in range(popSize // 2):
         pairs = random.choices(intermediatePop, k=2)
         randNum = rnd.randint(4)
-        if(randNum == 0):
+        if(randNum == 0 or pairs[0][1][1] == pairs[1][1][1]):
             returnPop.append((pairs[0][0], pairs[0][1], False))
             returnPop.append((pairs[1][0], pairs[1][1], False))
         else:
             item1 = pairs[0][1]
             item2 = pairs[1][1]
+            pivot = rnd.randint(1, N-1)
 
-            if not( item1[1] == item2[1]):
-                pivot = rnd.randint(1, N-1)
-
-                returnPop.append((pairs[0][0], item1[0:pivot] + item2[pivot:], True))
-                returnPop.append((pairs[1][0], item2[0:pivot] + item1[pivot:], True))
-            else:
-                returnPop.append(pairs[0])
-                returnPop.append(pairs[1])
+            returnPop.append((pairs[0][0], item1[0:pivot] + item2[pivot:], True))
+            returnPop.append((pairs[1][0], item2[0:pivot] + item1[pivot:], True))
 
     return returnPop
 
@@ -289,6 +283,7 @@ def generateIntermediatePopulation(population, popSize, N):
 def genereatePopulation(popSize):
     population = []
     population.append(globalBestRule)
+
 
     for i in range(popSize - len(population)):
 
@@ -319,7 +314,8 @@ def genereatePopulation(popSize):
 
         # (fitness, rules, has the rule changed thus the fitness has changed?)
         population.append((0.0, genotype, True))
-
+        
+        # Set specific pop points here if needed 
         #population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
 
     return population
@@ -338,14 +334,16 @@ def stockRunner():
         population.sort(key=lambda a: a[0], reverse=True)
 
         # if population is averaging around the same genotype
-        if population[0][1] == population[POPULATION_SIZE // 3][1]:
-            popultation = mutate(0.5, population)
-            population = calcFitness(stockData, population)
-            population.sort(key=lambda a: a[0], reverse=True)
-        elif population[0][1] == population[(POPULATION_SIZE // 2) - 1][1]:
-            popultation = mutate(0.3, population)
-            population = calcFitness(stockData, population)
-            population.sort(key=lambda a: a[0], reverse=True)
+        #if population[0][1] == population[POPULATION_SIZE // 3][1]:
+        #    print("Mutating at .3")
+        #    popultation = mutate(0.5, population)
+        #    population = calcFitness(stockData, population)
+        #    population.sort(key=lambda a: a[0], reverse=True)
+        #elif population[0][1] == population[(POPULATION_SIZE // 2) - 1][1]:
+        #    print("Mutating at .5")
+        #    popultation = mutate(0.3, population)
+        #    population = calcFitness(stockData, population)
+        #    population.sort(key=lambda a: a[0], reverse=True)
 
         print("###################\nGeneration: {}".format(i+ 1))
         if(population[0][0] > bestRule[0]):

@@ -7,6 +7,8 @@ POPULATION_SIZE = 50
 MUTATION_RATE = .1
 GENERATIONS = 100
 
+BEST_RULE = (0.0, 'e746|e121|m517', True)
+
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
 def calcSMA(dataRange):
@@ -301,7 +303,6 @@ def generateIntermediatePopulation(population, popSize, N):
 
             returnPop.append((pairs[0][0], newItem1, True))
             returnPop.append((pairs[1][0], newItem2, True))
-
         if(len(set(returnPop)) < 2):
             returnPop.append(random.choice(intermediatePop))
 
@@ -311,8 +312,9 @@ def generateIntermediatePopulation(population, popSize, N):
 # makes the initial population based off set pop size
 def genereatePopulation(popSize):
     population = []
+    population.append(BEST_RULE)
 
-    for i in range(popSize):
+    for i in range(popSize - len(population)):
 
         ruleTypes = []
         ruleValues = []
@@ -349,8 +351,6 @@ def genereatePopulation(popSize):
 def stockRunner():
     stockData = sr.readAllFileStocks()
 
-    bestRule = (0.0,"s050&m050&e050")
-
     population = genereatePopulation(POPULATION_SIZE)
     population = calcFitness(stockData, population)
 
@@ -361,21 +361,22 @@ def stockRunner():
         population.sort(key=lambda a: a[0], reverse=True)
 
         if population[0][1] == population[POPULATION_SIZE // 3][1]:
-            popultation = mutate(population, 0.5)
+            popultation = mutate(0.5, population)
             population = calcFitness(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
         elif population[0][1] == population[POPULATION_SIZE // 2][1]:
-            popultation = mutate(population, 0.3)
+            popultation = mutate(0.3, population)
             population = calcFitness(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
 
-
-        if(population[0][0] > bestRule[0]):
-            bestRule = population[0]
+        print("\n################\n{}\n".format(i + 1))
+        if(population[0][0] > BEST_RULE[0]):
+            BEST_RULE = population[0]
             print("\n\n*************************************")
-            print("New best rule in {} generation is {} \n\n".format(i + 1, bestRule))
+            print("New best rule in {} generation is {} \n\n".format(i + 1, BEST_RULE))
 
-        print("\n#{}\n".format(i + 1), population)
+        for item in population:
+            print("Rule: {}   Fitness: {}".format(population[1], population[0]))
 
     for x in population:
         print("{}, {}".format(x[1], round(x[0], 2)))

@@ -4,11 +4,10 @@ import random
 import threading
 
 RANDOM_SEED_VALUE = 12
-POPULATION_SIZE = 50
+POPULATION_SIZE = 5
 MUTATION_RATE = .1
-GENERATIONS = 100
-
-BEST_RULE = (0.0, 'e746|e121|m517', True)
+GENERATIONS = 10
+globalBestRule = (0.0, 'e746|e121|m517', True)
 
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
@@ -108,15 +107,18 @@ def runRule(rule, range, data, numOfPurchasedStocks):
             return True
 
     return False
-
-def calcFitness(stockData, population, genotypes, fitPop):
-    # break out the different rules
+    
+# runs input data against 3 rules contained in genotype
+def calcFitness(stockData, population):
+    fitPop = []
+    for genotypes in population:
+        if genotypes[2]:
+            # break out the different rules
             ruleBlock = genotypes[1]
             rules = [(ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (ruleBlock[10], int(ruleBlock[11:14]), 'end')]
 
             profit = 0
             availableFunds = 20000
-            response = set({})
             numOfPurchasedStocks = 0
 
             if not(rules[0][1] == 0 and rules[1][1] == 0 and rules[2][1] == 0):
@@ -133,7 +135,6 @@ def calcFitness(stockData, population, genotypes, fitPop):
                          rule0Range = dataset[(startPoint - rules[0][1]):(startPoint)]
                          rule1Range = dataset[(startPoint - rules[1][1]):(startPoint)]
                          rule2Range = dataset[(startPoint - rules[2][1]):(startPoint)]
-
 
                     for data in dataset[startPoint:]:
                         ruleBoolean = [False, False, False]
@@ -219,13 +220,6 @@ def calcFitness(stockData, population, genotypes, fitPop):
 
             # save fitness
             fitPop.append((profit, genotypes[1], False))
-
-# runs input data against 3 rules contained in genotype
-def calcFitnessDriver(stockData, population):
-    fitPop = []
-    for genotypes in population:
-        if genotypes[2]:
-            calcFitness(stockData, population, genotypes, fitPop)
         else:
             fitPop.append(genotypes)
     return fitPop
@@ -240,9 +234,7 @@ def generateIntermediatePopulation(population, popSize, N):
     intermediatePop = []
     #print(popAverage, len(population))
 
-
-    for row in population:
-        
+    for row in population:  
         randNum = rnd.randint(100)
         fitness = row[0]
 
@@ -261,13 +253,13 @@ def generateIntermediatePopulation(population, popSize, N):
                     intermediatePop.append(row)
 
         randNum = rnd.randint(100)
-        if( randNum > 90):
+        if( randNum > 90 and row[0] != 0.0):
             intermediatePop.append(row)
 
-        if len(intermediatePop) <= 2:
-            intermediatePop.append(population[0])
-            intermediatePop.append(population[1])
-
+    if len(intermediatePop) <= 2:
+        intermediatePop.append(random.choices(population))
+        intermediatePop.append(random.choices(population))
+            
 
     # get new pop 
     returnPop = []
@@ -283,29 +275,20 @@ def generateIntermediatePopulation(population, popSize, N):
             item2 = pairs[1][1]
 
             if not( item1[1] == item2[1]):
-
                 pivot = rnd.randint(1, N-1)
-         
-                newItem1 = []
-                newItem2 = []
 
-                newItem1 = item1[0:pivot] + item2[pivot:]
-                newItem2 = item2[0:pivot] + item1[pivot:]
-                #print("New Item1: ", newItem1, "New Item 2: ", newItem2)
-
-            returnPop.append((pairs[0][0], newItem1, True))
-            returnPop.append((pairs[1][0], newItem2, True))
-
-        if(len(set(returnPop)) < 2):
-            returnPop.append(random.choice(intermediatePop))
+                returnPop.append((pairs[0][0], item1[0:pivot] + item2[pivot:], True))
+                returnPop.append((pairs[1][0], item2[0:pivot] + item1[pivot:], True))
+            else:
+                returnPop.append(pairs[0])
+                returnPop.append(pairs[1])
 
     return returnPop
-    
 
 # makes the initial population based off set pop size
 def genereatePopulation(popSize):
     population = []
-    population.append(BEST_RULE)
+    population.append(globalBestRule)
 
     for i in range(popSize - len(population)):
 
@@ -342,9 +325,8 @@ def genereatePopulation(popSize):
     return population
 
 def stockRunner():
+    bestRule = globalBestRule
     stockData = sr.readAllFileStocks()
-
-    bestRule = (0.0,"s050&m050&e050")
 
     population = genereatePopulation(POPULATION_SIZE)
     population = calcFitness(stockData, population)
@@ -357,21 +339,22 @@ def stockRunner():
 
         # if population is averaging around the same genotype
         if population[0][1] == population[POPULATION_SIZE // 3][1]:
-            popultation = mutate(population, 0.5)
+            popultation = mutate(0.5, population)
             population = calcFitness(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
-        elif population[0][1] == population[POPULATION_SIZE // 2][1]:
-            popultation = mutate(population, 0.3)
+        elif population[0][1] == population[(POPULATION_SIZE // 2) - 1][1]:
+            popultation = mutate(0.3, population)
             population = calcFitness(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
 
-
+        print("###################\nGeneration: {}".format(i+ 1))
         if(population[0][0] > bestRule[0]):
             bestRule = population[0]
-            print("\n\n*************************************")
-            print("New best rule in {} generation is {} \n\n".format(i + 1, bestRule))
+            print("\n\n  *************************************")
+            print("  New best rule in {} generation is {} \n\n".format(i + 1, bestRule))
 
-        print("\n#{}\n".format(i + 1), population)
+            for item in population:
+                print("  Fitness: {} Rule:{}".format(item[0], item[1]))
 
-    for x in population:
-        print("{}, {}".format(x[1], round(x[0], 2)))
+ 
+    print("The best overall rule is: {} with a fitness of {}".format(bestRule[1], round(bestRule[0], 2)))

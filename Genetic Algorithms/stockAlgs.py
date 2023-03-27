@@ -6,27 +6,27 @@ import threading
 RANDOM_SEED_VALUE = 12
 POPULATION_SIZE = 50
 MUTATION_RATE = .1
-GENERATIONS = 20
+GENERATIONS = 100
 
 rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
 def calcSMA(dataRange):
-    #print("SMA")
     return(sum(dataRange) / len(dataRange))
         
+
 def calcEMA(dataRange):
-    #print("Begin EMA")
     a = 2 / (len(dataRange) + 1)
     totalSum = dataRange[0]
     totalDenom = 1
     for i in range(1, len(dataRange)):
         totalSum += pow(1 - a, i) * dataRange[i]
         totalDenom += pow(1 - a, i)
+
     return totalSum / totalDenom
 
 def calcMax(dataRange):
-    #print("Max")
     return max(dataRange)
+
 
 def getRandRule(current):
     if current == 's':
@@ -88,8 +88,8 @@ def mutate(rate, population):
 
     return mutated
 
-# driver
-def runRule(rule, range, data, numOfPurchasedStocks, boolArr, index):
+# driver that returns the correct rule's value
+def runRule(rule, range, data, numOfPurchasedStocks):
     calcVal = 0.0
 
     if(rule[1] != 0):
@@ -101,26 +101,14 @@ def runRule(rule, range, data, numOfPurchasedStocks, boolArr, index):
             calcVal = calcMax(range)
 
         if(numOfPurchasedStocks == 0 and data > calcVal):
-            boolArr[index] = True
+            return True
         elif numOfPurchasedStocks > 0 and data < calcVal:
-            boolArr[index] = True
+            return True
 
-    boolArr[index] = True
+    return False
 
-def updateArray(arr, data):
-      np.delete(arr, 0)
-      np.append(arr, data)
-
-# runs input data against 3 rules contained in genotype
-def calcFitness(stockData, population):
-    print("Begin Fitness")
-    fitPop = []
-    for genotypes in population:
-        print("Genotype: ", genotypes)
-
-        # if the fitness needs to be recalculated 
-        if genotypes[2]:
-            # somehow break out the different rules
+def calcFitness(stockData, population, genotypes, fitPop):
+    # break out the different rules
             ruleBlock = genotypes[1]
             rules = [(ruleBlock[0], int(ruleBlock[1:4]), ruleBlock[4]), (ruleBlock[5], int(ruleBlock[6:9]), ruleBlock[9]), (ruleBlock[10], int(ruleBlock[11:14]), 'end')]
 
@@ -160,16 +148,12 @@ def calcFitness(stockData, population):
                                 availableFunds += profit
                                 profit = 0
 
-                        thread0 = None
-                        thread1 = None
-                        thread2 = None
-                        
                     # add current data to previous data and adjust accordingly
                         if( len(rule0Range) < rules[0][1]):
                             np.append(rule0Range,data)
                             ruleBoolean[0] = False
-                        else:                 
-                            thread0 = threading.Thread(target=runRule, args=(rules[0], rule0Range, data, numOfPurchasedStocks, ruleBoolean, 0))
+                        elif rules[0][1] != 0:               
+                            ruleBoolean[0] = runRule(rules[0], rule0Range, data, numOfPurchasedStocks)
               
                             np.delete(rule0Range, 0)
                             np.append(rule0Range, data)
@@ -178,7 +162,7 @@ def calcFitness(stockData, population):
                            np.append(rule1Range, data)
                            ruleBoolean[1] = False
                         elif rules[1][1] != 0:
-                            thread1 = threading.Thread(target=runRule, args=(rules[1], rule0Range, data, numOfPurchasedStocks, ruleBoolean, 1))
+                            ruleBoolean[1] = runRule(rules[1], rule1Range, data, numOfPurchasedStocks)
 
                             np.delete(rule1Range, 0)
                             np.append(rule1Range, data)
@@ -187,58 +171,12 @@ def calcFitness(stockData, population):
                            np.append(rule2Range, data)
                            ruleBoolean[2] = False
                         elif rules[2][1] != 0:
-                            thread2 = threading.Thread(target=runRule, args=(rules[2], rule0Range, data, numOfPurchasedStocks, ruleBoolean, 2))
+                            ruleBoolean[2] = runRule(rules[2], rule2Range, data, numOfPurchasedStocks)
 
                             np.delete(rule2Range, 0)
                             np.append(rule2Range, data)
 
-                        if(thread0 != None and thread1 != None and thread2 != None):
-                            thread0.start()
-                            thread1.start()
-                            thread2.start()
-                            thread0.join()
-                            thread1.join()
-                            thread2.join()
 
-                            updateArray(rule0Range, data)
-                            updateArray(rule1Range, data)
-                            updateArray(rule2Range, data)
-                        elif( thread0 != None and thread1 != None):
-                            thread0.start()
-                            thread1.start()
-                            thread0.join()
-                            thread1.join()
-                           
-                            updateArray(rule0Range, data)
-                            updateArray(rule1Range, data)
-                        elif( thread1 != None and thread2 != None):
-                            thread1.start()
-                            thread2.start()
-                            thread1.join()
-                            thread2.join()
-
-                            updateArray(rule1Range, data)
-                            updateArray(rule2Range, data)
-                        elif( thread0 != None and thread2 != None):
-                            thread0.start()
-                            thread2.start()
-                            thread0.join()
-                            thread2.join()
-
-                            updateArray(rule0Range, data)
-                            updateArray(rule1Range, data)
-                        elif( thread0 != None):
-                            thread0.start()
-                            updateArray(rule0Range, data)
-
-                        elif( thread1 != None):
-                            thread1.start()
-                            updateArray(rule1Range, data)
-                        elif( thread2 != None):
-                            thread2.start()
-                            updateArray(rule1Range, data)
-
-                        print(ruleBoolean)
                         # determine if the rule is true
                         choice = False
 
@@ -279,14 +217,19 @@ def calcFitness(stockData, population):
 
             # save fitness
             fitPop.append((profit, genotypes[1], False))
+
+# runs input data against 3 rules contained in genotype
+def calcFitnessDriver(stockData, population):
+    fitPop = []
+    for genotypes in population:
+        if genotypes[2]:
+            calcFitness(stockData, population, genotypes, fitPop)
         else:
             fitPop.append(genotypes)
-    print("End Fitness")
     return fitPop
 
 
 def generateIntermediatePopulation(population, popSize, N):
-    print("Begin Gen Pop")
     popAverage = 0.0
     for row in population:
        popAverage += row[0]
@@ -353,8 +296,7 @@ def generateIntermediatePopulation(population, popSize, N):
             else:
                 returnPop.append((pairs[0][0], item1, False))
                 returnPop.append((pairs[1][0], item2, False))
-    
-    print("End Gen Pop")
+
     return returnPop
     
 
@@ -402,22 +344,22 @@ def stockRunner():
     bestRule = (-1.0,"s050&m050&e050")
 
     population = genereatePopulation(POPULATION_SIZE)
-    population = calcFitness(stockData, population)
+    population = calcFitnessDriver(stockData, population)
 
     for i in range(GENERATIONS):
         population = generateIntermediatePopulation(population, POPULATION_SIZE, 14)
         population = mutate(MUTATION_RATE, population)
-        population = calcFitness(stockData, population)
+        population = calcFitnessDriver(stockData, population)
         population.sort(key=lambda a: a[0], reverse=True)
 
         # if population is averaging around the same genotype
         if population[0][1] == population[POPULATION_SIZE // 3][1]:
             popultation = mutate(0.5, population)
-            population = calcFitness(stockData, population)
+            population = calcFitnessDriver(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
         elif population[0][1] == population[POPULATION_SIZE // 2][1]:
             popultation = mutate(population, 0.3)
-            population = calcFitness(stockData, population)
+            population = calcFitnessDriver(stockData, population)
             population.sort(key=lambda a: a[0], reverse=True)
 
         print("###################\nGeneration: {}".format(i+ 1))

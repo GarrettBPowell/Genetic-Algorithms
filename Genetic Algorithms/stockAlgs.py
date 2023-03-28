@@ -3,13 +3,23 @@ import numpy as np
 import random 
 import threading
 
-RANDOM_SEED_VALUE = 5
-POPULATION_SIZE = 50
-MUTATION_RATE = .1
-GENERATIONS = 100
-globalBestRule = (0.0, 'e746|e121|m517', True)
+def globalVars():
+    global RANDOM_SEED_VALUE 
+    RANDOM_SEED_VALUE = 5
+    global POPULATION_SIZE 
+    POPULATION_SIZE = 50
 
-rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
+    global MUTATION_RATE
+    MUTATION_RATE = .1
+
+    global GENERATIONS
+    GENERATIONS = 100
+
+    global globalBestRule
+    globalBestRule = (0.0, 'e250|e053&e119', True)
+
+    global rnd
+    rnd = np.random.RandomState(RANDOM_SEED_VALUE) 
 
 def calcSMA(dataRange):
     return(sum(dataRange) / len(dataRange))
@@ -136,7 +146,7 @@ def calcFitness(stockData, population):
                          rule1Range = dataset[(startPoint - rules[1][1]):(startPoint)]
                          rule2Range = dataset[(startPoint - rules[2][1]):(startPoint)]
 
-                    for data in dataset[startPoint:]:
+                    for index, data in enumerate(dataset[startPoint:]):
                         ruleBoolean = [False, False, False]
 
                         # adjust profit and available funds to be appropriate starting ammounts
@@ -217,7 +227,12 @@ def calcFitness(stockData, population):
                             else:
                                 availableFunds = numOfPurchasedStocks * data
                                 numOfPurchasedStocks = 0
-            # save fitness
+                        # sell rest of stock and add remaining mons
+                        if(index == len(stockData) - 1):
+                            if numOfPurchasedStocks > 0:
+                                profit += numOfPurchasedStocks * data
+                            profit += availableFunds
+             # save fitness
             fitPop.append((profit, genotypes[1], False))
         else:
             fitPop.append(genotypes)
@@ -231,6 +246,7 @@ def generateIntermediatePopulation(population, popSize, N):
     popAverage /= popSize
 
     intermediatePop = []
+    intermediatePop.append(globalBestRule)
     #print(popAverage, len(population))
 
     for row in population:  
@@ -259,7 +275,6 @@ def generateIntermediatePopulation(population, popSize, N):
         intermediatePop.append(random.choices(population))
         intermediatePop.append(random.choices(population))
             
-
     # get new pop 
     returnPop = []
     # cross over or 25% chance to take parent
@@ -284,9 +299,7 @@ def genereatePopulation(popSize):
     population = []
     population.append(globalBestRule)
 
-
     for i in range(popSize - len(population)):
-
         ruleTypes = []
         ruleValues = []
         ruleBools = []
@@ -321,7 +334,8 @@ def genereatePopulation(popSize):
     return population
 
 def stockRunner():
-    bestRule = globalBestRule
+    globalVars()
+    global globalBestRule
     stockData = sr.readAllFileStocks()
 
     population = genereatePopulation(POPULATION_SIZE)
@@ -334,25 +348,25 @@ def stockRunner():
         population.sort(key=lambda a: a[0], reverse=True)
 
         # if population is averaging around the same genotype
-        #if population[0][1] == population[POPULATION_SIZE // 3][1]:
-        #    print("Mutating at .3")
-        #    popultation = mutate(0.5, population)
-        #    population = calcFitness(stockData, population)
-        #    population.sort(key=lambda a: a[0], reverse=True)
-        #elif population[0][1] == population[(POPULATION_SIZE // 2) - 1][1]:
-        #    print("Mutating at .5")
-        #    popultation = mutate(0.3, population)
-        #    population = calcFitness(stockData, population)
-        #    population.sort(key=lambda a: a[0], reverse=True)
+        if population[0][1] == population[POPULATION_SIZE // 3][1]:
+            print("Mutating at .3")
+            popultation = mutate(0.5, population)
+            population = calcFitness(stockData, population)
+            population.sort(key=lambda a: a[0], reverse=True)
+        elif population[0][1] == population[(POPULATION_SIZE // 2) - 1][1]:
+            print("Mutating at .5")
+            popultation = mutate(0.3, population)
+            population = calcFitness(stockData, population)
+            population.sort(key=lambda a: a[0], reverse=True)
 
         print("###################\nGeneration: {}".format(i+ 1))
-        if(population[0][0] > bestRule[0]):
-            bestRule = population[0]
+        if(population[0][0] > globalBestRule[0]):
+            globalBestRule = population[0]
             print("\n\n  *************************************")
-            print("  New best rule in {} generation is {} \n\n".format(i + 1, bestRule))
+            print("  New best rule in {} generation is {} \n\n".format(i + 1, globalBestRule))
 
             for item in population:
                 print("  Fitness: {} Rule:{}".format(item[0], item[1]))
 
  
-    print("The best overall rule is: {} with a fitness of {}".format(bestRule[1], round(bestRule[0], 2)))
+    print("The best overall rule is: {} with a fitness of {}".format(globalBestRule[1], round(globalBestRule[0], 2)))

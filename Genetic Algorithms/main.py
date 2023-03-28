@@ -44,7 +44,7 @@ def menu():
             printAnswer(ga.genKnapRunner(user_input), "Genetic Knapsack")
 
         if user_input == 2:
-            print('Stock')
+            print('Running Stocks')
             sa.stockRunner()
 
 

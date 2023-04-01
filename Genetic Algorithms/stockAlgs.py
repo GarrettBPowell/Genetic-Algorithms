@@ -1,7 +1,6 @@
 import stockReader as sr
 import numpy as np
 import random 
-import threading
 
 def globalVars():
     global RANDOM_SEED_VALUE 
@@ -133,6 +132,7 @@ def calcFitness(stockData, population):
 
             if not(rules[0][1] == 0 and rules[1][1] == 0 and rules[2][1] == 0):
                 for dataset in stockData:
+                    internalProfit = 0
 
                     rule0Range = np.array([])
                     rule1Range = np.array([])
@@ -150,15 +150,18 @@ def calcFitness(stockData, population):
                         ruleBoolean = [False, False, False]
 
                         # adjust profit and available funds to be appropriate starting ammounts
-                        if(availableFunds > 20000):
-                            profit += availableFunds - 20000
-                            availableFunds = 20000
-                        elif(availableFunds < 20000 and numOfPurchasedStocks == 0):
-                            if(profit - (20000 - availableFunds) > 0):
-                                profit -= 20000 - availableFunds
-                                availableFunds = 20000
+                        if(availableFunds > 100000):
+                            internalProfit += availableFunds - 100000
+                            profit += availableFunds - 100000
+                            availableFunds = 100000
+                        elif(availableFunds < 100000 and numOfPurchasedStocks == 0):
+                            if(profit - (100000 - availableFunds) > 0):
+                                profit -= 100000 - availableFunds
+                                internalProfit -= 100000 - availableFunds
+                                availableFunds = 100000
                             else:
                                 availableFunds += profit
+                                internalProfit = 0
                                 profit = 0
 
                     # add current data to previous data and adjust accordingly
@@ -231,12 +234,22 @@ def calcFitness(stockData, population):
                         if(index == len(stockData) - 1):
                             if numOfPurchasedStocks > 0:
                                 profit += numOfPurchasedStocks * data
+                                internalProfit += numOfPurchasedStocks * data
+                                print("Internal Profit: ", internalProfit)
                             profit += availableFunds
              # save fitness
             fitPop.append((profit, genotypes[1], False))
         else:
             fitPop.append(genotypes)
     return fitPop
+
+def modifiedFitness(genotypes):
+    globalVars()
+    stockData = sr.readAllNewFileStocks()
+    calcFitness(stockData, [genotypes])
+
+                
+
 
 
 def generateIntermediatePopulation(population, popSize, N):
@@ -328,10 +341,19 @@ def genereatePopulation(popSize):
         # (fitness, rules, has the rule changed thus the fitness has changed?)
         population.append((0.0, genotype, True))
         
-        # Set specific pop points here if needed 
-        #population = [(0.0, "s010&e000&m000"), (0.0,"s000&e010&m000"), (0.0,"s000&e000&m010"), (0.0,"s010&e010&m000"), (0.0,"s010&e000&m020"), (0.0,"s025|e015&m000"), (0.0,"s030|e030|m030"), (0.0,"s010&s025|e000"), (0.0,"s900&e950|m950"), (0.0,"s008&e008|m050")]
-
     return population
+
+
+def checkFitnessOnce():
+     globalVars()
+     stockData = sr.readAllNewFileStocks()
+
+     population = [(0.0, "e250|e053&e119", True), (0.0, "s010&s010&s010", True), (0.0, "s030&s030&s030", True), (0.0, "e010&e010&e010", True), (0.0, "e030&e030&e030", True), (0.0, "m010&m010&m010", True), (0.0, "m030&m030&m030", True), (0.0, "s010|e010|m010", True), (0.0, "s030|e030|m030", True) ]
+     population = calcFitness(stockData, population)
+
+     for item in population:
+         print(item[1], round(item[0], 2))
+
 
 def stockRunner():
     globalVars()

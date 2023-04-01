@@ -36,12 +36,40 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="newStockResources\" />
+    <Folder Include="newStockResources\amazon\" />
+    <Folder Include="newStockResources\newPrices\" />
     <Folder Include="resources\" />
     <Folder Include="stockResources\" />
     <Folder Include="Fitness\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Fitness\TextFile1.txt" />
+    <Content Include="Fitness\Best fitness.txt" />
+    <Content Include="newStockResources\amazon\AMZN-120_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-18_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-1_month.txt" />
+    <Content Include="newStockResources\amazon\AMZN-2_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-36_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-4_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-60_months.txt" />
+    <Content Include="newStockResources\amazon\AMZN-8_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-120_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-18_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-1_month.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-2_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-36_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-4_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-60_months.txt" />
+    <Content Include="newStockResources\newPrices\AMZN-8_months.txt" />
+    <Content Include="newStockResources\newPrices\BAC-1.txt" />
+    <Content Include="newStockResources\newPrices\BAC-2.txt" />
+    <Content Include="newStockResources\newPrices\BAC-3.txt" />
+    <Content Include="newStockResources\newPrices\GRMN-1.txt" />
+    <Content Include="newStockResources\newPrices\GRMN-2.txt" />
+    <Content Include="newStockResources\newPrices\GRMN-3.txt" />
+    <Content Include="newStockResources\newPrices\KR-1.txt" />
+    <Content Include="newStockResources\newPrices\KR-2.txt" />
+    <Content Include="newStockResources\newPrices\KR-3.txt" />
     <Content Include="resources\test5.csv" />
     <Content Include="resources\test100.csv" />
     <Content Include="stockResources\AAPL-1.txt" />

@@ -8,6 +8,8 @@ def print_menu():
                ================================\n
                1 - Genetic Knapsack
                2 - Stocks (whole folder)
+               3 - Test New Data
+               4 - Single Test
                9 - Exit                        \n
                ================================\n
            Enter a choice and press enter:"""
@@ -47,6 +49,13 @@ def menu():
             print('Running Stocks')
             sa.stockRunner()
 
+        if user_input == 3:
+            print('Running Test')
+            sa.checkFitnessOnce()
+
+        if user_input == 4:
+            print("Single Best")
+            sa.modifiedFitness((0.0, "e250|e053&e119", True))
 
         # Exit
         elif user_input == 9:
